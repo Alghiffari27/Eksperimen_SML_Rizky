@@ -1,0 +1,39 @@
+name: Automate Data Preprocessing
+
+on:
+  push:
+    paths:
+      - 'stroke_raw/**'
+      - 'preprocessing/automate_*.py'
+      - '.github/workflows/automate_preprocessing.yml'
+  workflow_dispatch:
+
+jobs:
+  preprocess_data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12.7'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy scikit-learn
+
+      - name: Run Preprocessing Script
+        run: |
+          cd preprocessing
+          python automate_Rizky.py --input ../stroke_raw/healthcare-dataset-stroke-data.csv --output stroke_preprocessing/dataset_bersih.csv
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name 'GitHub Action Bot'
+          git config --global user.email 'action@github.com'
+          git add preprocessing/stroke_preprocessing/dataset_bersih.csv
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-update data bersih" && git push)
